@@ -1,0 +1,5 @@
+syntax: glob
+*.o
+*.o.d
+*-proxy.hpp
+env2systemd
