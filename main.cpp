@@ -147,20 +147,20 @@ public:
         }
     }
 
-    void on_resume() {
+    void on_resume(const std::string& reason) {
         try {
             _manager.StartUnit(_resuming_target, SYSTEMD_OVERRIDE);
-            std::cout << "UP: Resuming" << std::endl;
+            std::cout << "UP: Resuming (" << reason << ")" << std::endl;
         }
         catch(DBus::Error e) {
             std::cerr << "UP->Systemd DBus Error: " << e.message() << std::endl;
         }
     }
 
-    void on_sleep() {
+    void on_sleep(const std::string& reason) {
         try {
             _manager.StartUnit(_sleeping_target, SYSTEMD_OVERRIDE);
-            std::cout << "UP: Sleeping" << std::endl;
+            std::cout << "UP: Sleeping (" << reason << ")" << std::endl;
         }
         catch(DBus::Error e) {
             std::cerr << "UP->Systemd DBus Error: " << e.message() << std::endl;
@@ -217,11 +217,11 @@ int main(int argc, char *argv[])
                              [&up](bool active) {
                                  up.on_low_battery(active);
                              },
-                             [&up]() {
-                                 up.on_sleep();
+                             [&up](const std::string& reason) {
+                                 up.on_sleep(reason);
                              },
-                             [&up]() {
-                                 up.on_resume();
+                             [&up](const std::string& reason) {
+                                 up.on_resume(reason);
                              });
     try {
         dispatcher.enter();
