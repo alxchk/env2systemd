@@ -99,21 +99,15 @@ public:
 class UPowerDispatch {
     std::string _battery_target;
     std::string _low_battery_target;
-    std::string _sleeping_target;
-    std::string _resuming_target;
 
     Systemd1::Manager & _manager;
 
 public:
     UPowerDispatch(const char * const battery_target,
                    const char * const low_battery_target,
-                   const char * const sleeping_target,
-                   const char * const resuming_target,
                    Systemd1::Manager & manager)
         : _battery_target(battery_target),
           _low_battery_target(low_battery_target),
-          _sleeping_target(sleeping_target),
-          _resuming_target(resuming_target),
           _manager(manager)
         {}
 
@@ -141,26 +135,6 @@ public:
                 _manager.StopUnit(_low_battery_target, SYSTEMD_OVERRIDE);
                 std::cout << "UP: Disable On Low Battery" << std::endl;
             }
-        }
-        catch(DBus::Error e) {
-            std::cerr << "UP->Systemd DBus Error: " << e.message() << std::endl;
-        }
-    }
-
-    void on_resume(const std::string& reason) {
-        try {
-            _manager.StartUnit(_resuming_target, SYSTEMD_OVERRIDE);
-            std::cout << "UP: Resuming (" << reason << ")" << std::endl;
-        }
-        catch(DBus::Error e) {
-            std::cerr << "UP->Systemd DBus Error: " << e.message() << std::endl;
-        }
-    }
-
-    void on_sleep(const std::string& reason) {
-        try {
-            _manager.StartUnit(_sleeping_target, SYSTEMD_OVERRIDE);
-            std::cout << "UP: Sleeping (" << reason << ")" << std::endl;
         }
         catch(DBus::Error e) {
             std::cerr << "UP->Systemd DBus Error: " << e.message() << std::endl;
@@ -194,8 +168,6 @@ int main(int argc, char *argv[])
 
     UPowerDispatch up(UNIT_ON_BATTERY,
                       UNIT_ON_LOW_BATTERY,
-                      UNIT_RESUMING,
-                      UNIT_SUSPENDING,
                       manager);
 
     Login1::Session login1(system, [&lock](bool locked) {
@@ -216,12 +188,6 @@ int main(int argc, char *argv[])
                              },
                              [&up](bool active) {
                                  up.on_low_battery(active);
-                             },
-                             [&up](const std::string& reason) {
-                                 up.on_sleep(reason);
-                             },
-                             [&up](const std::string& reason) {
-                                 up.on_resume(reason);
                              });
     try {
         dispatcher.enter();

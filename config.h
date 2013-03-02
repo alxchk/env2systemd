@@ -23,12 +23,3 @@
 #ifndef UNIT_ON_LOW_BATTERY
 #define UNIT_ON_LOW_BATTERY "low-battery.target"
 #endif
-
-#ifndef UNIT_RESUMING
-#define UNIT_RESUMING       "resuming.target"
-#endif
-
-#ifndef UNIT_SUSPENDING
-#define UNIT_SUSPENDING     "suspending.target"
-#endif
-

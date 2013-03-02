@@ -14,8 +14,6 @@ namespace UPower1 {
   {
     std::function<void (bool)> __battery_hook;
     std::function<void (bool)> __low_battery_hook;
-    std::function<void (const std::string&)> __resuming_hook;
-    std::function<void (const std::string&)> __sleeping_hook;
 
     bool __last_battery;
     bool __last_low_battery;
@@ -23,9 +21,7 @@ namespace UPower1 {
   public:
     Manager(DBus::Connection &connection,
             std::function<void (bool)>,
-            std::function<void (bool)>,
-            std::function<void (const std::string &)>,
-            std::function<void (const std::string &)>);
+            std::function<void (bool)>);
 
   protected:
     virtual void DeviceAdded(const ::DBus::Path& device);
