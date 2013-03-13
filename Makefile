@@ -6,8 +6,10 @@ SOURCES  := main.cpp \
 		login1-manager.cpp \
 		upower1-manager.cpp \
 		systemd1-manager.cpp \
+		acpi-manager.cpp \
 		network-manager.cpp
 PROXIES  := systemd1-manager-proxy.hpp \
+		systemd1-manager-unit-proxy.hpp \
 		login1-proxy.hpp \
 		login1-session-proxy.hpp \
 		network-manager-proxy.hpp \
@@ -24,6 +26,9 @@ LDFLAGS  += $(shell pkg-config --libs $(PKGDEPS)) -flto -Wl,-O1 -Wl,--as-needed
 all: $(OUTPUT)
 
 systemd1-manager-proxy.hpp: introspection/org.freedesktop.systemd1.Manager.xml
+	dbusxx-xml2cpp $< --proxy=$@
+
+systemd1-manager-unit-proxy.hpp: introspection/org.freedesktop.systemd1.Unit.xml
 	dbusxx-xml2cpp $< --proxy=$@
 
 login1-proxy.hpp: introspection/org.freedesktop.login1.xml

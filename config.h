@@ -23,3 +23,15 @@
 #ifndef UNIT_ON_LOW_BATTERY
 #define UNIT_ON_LOW_BATTERY "low-battery.target"
 #endif
+
+#ifndef UNIT_ACPI_LID
+#define UNIT_ACPI_LID "acpi-lid.target"
+#endif
+
+#ifndef UNIT_ACPI_HKEY
+#define UNIT_ACPI_HKEY "acpi-hkey"
+#endif
+
+#ifndef UNIT_ACPI_HKEY_TYPE
+#define UNIT_ACPI_HKEY_TYPE "target"
+#endif

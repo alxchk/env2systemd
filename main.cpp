@@ -2,6 +2,7 @@
 #include <string>
 #include <algorithm>
 #include <functional>
+#include <thread>
 
 #include <sys/signal.h>
 
@@ -9,6 +10,7 @@
 #include "upower1-manager.hpp"
 #include "systemd1-manager.hpp"
 #include "network-manager.hpp"
+#include "acpi-manager.hpp"
 
 #include "util.c"
 
@@ -142,6 +144,70 @@ public:
     }
 };
 
+class AcpiDispatch {
+
+public:
+    AcpiDispatch(Systemd1::Manager & manager)
+        : _manager(manager)
+    {}
+
+public:
+    void thread() {
+        std::thread([this](){
+                Acpi::Manager([this](const std::vector<std::string> &message) {
+                        this->dispatch(message);
+                    }).dispatch();
+            }).detach();
+    }
+
+private:
+    void dispatch(const std::vector<std::string> &message)
+    {
+        if (message.size() != 4) return;
+
+        const static std::string button = "button";
+        const static std::string video = "video";
+        const static std::string lid = "LID";
+
+        try {
+            if ((message[0].compare(0, button.size(), button) == 0) ||
+                (message[1] == "HKEY")) {
+                if (message[1].compare(0, lid.size(), lid) == 0) {
+                    if(std::stoi(message[3]) & 1) {
+                        /* LID close */
+                        _manager.StartUnit(UNIT_ACPI_LID, SYSTEMD_OVERRIDE);
+                    } else {
+                        /* Lid open */
+                        _manager.StopUnit(UNIT_ACPI_LID, SYSTEMD_OVERRIDE);
+                    }
+                } else {
+                    std::string unit = UNIT_ACPI_HKEY "-" + message[2] + "-" + message[3] + "." UNIT_ACPI_HKEY_TYPE;
+                    if (_manager.getUnit(unit).ActiveState() != "active") {
+                        _manager.StartUnit(unit, SYSTEMD_OVERRIDE);
+                    } else {
+                        _manager.StopUnit(unit, SYSTEMD_OVERRIDE);
+                    }
+                }
+            } else if (message[0].compare(0, video.size(), video) == 0) {
+            }
+            else {
+                std::cerr << "ACPI: Unknown <" << message[0] << "> ("
+                          << message[1] << ", "
+                          << message[2] << ", "
+                          << message[3] << ")" << std::endl;
+                return;
+            }
+        }
+        catch (const DBus::Error &e) {
+            std::cerr << "ACPI->SYSTEMD: DBus Error: " << e.message() << std::endl;
+        }
+
+    }
+
+private:
+    Systemd1::Manager & _manager;
+};
+
 DBus::BusDispatcher dispatcher;
 
 void terminate(int sig) {
@@ -189,7 +255,11 @@ int main(int argc, char *argv[])
                              [&up](bool active) {
                                  up.on_low_battery(active);
                              });
+
+    AcpiDispatch ad(manager);
+
     try {
+        ad.thread();
         dispatcher.enter();
     } catch (DBus::Error e) {
         std::cerr << "Get unhandled DBus exception: " << e.message() << std::endl;
