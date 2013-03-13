@@ -5,7 +5,7 @@
 
 #include <sys/signal.h>
 
-#include "login1-session.hpp"
+#include "login1-manager.hpp"
 #include "upower1-manager.hpp"
 #include "systemd1-manager.hpp"
 #include "network-manager.hpp"
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
                       UNIT_ON_LOW_BATTERY,
                       manager);
 
-    Login1::Session login1(system, [&lock](bool locked) {
+    Login1::Manager login1(system, [&lock](bool locked) {
             lock.TriggerLock(locked);
         });
 
