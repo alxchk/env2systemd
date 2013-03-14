@@ -3,6 +3,7 @@ PKGDEPS_EXISTS := checkdeps
 
 OUTPUT   := env2systemd
 SOURCES  := main.cpp \
+		policy.cpp \
 		login1-manager.cpp \
 		upower1-manager.cpp \
 		systemd1-manager.cpp \
