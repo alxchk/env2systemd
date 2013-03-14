@@ -64,4 +64,11 @@ clean:
 checkdeps:
 	pkg-config --exists $(PKGDEPS)
 
+install: $(OUTPUT)
+	install -m 0111 -D $(OUTPUT) $(DESTDIR)/usr/bin/$(OUTPUT)
+	install -m 0444 -D contrib/env2systemd.service \
+			$(DESTDIR)/usr/lib/systemd/system/env2systemd.service
+	install -m 0444 -D contrib/env2systemd.service \
+			$(DESTDIR)/usr/lib/systemd/user/env2systemd.service
+
 -include $(SOURCES:.cpp=.o.d)

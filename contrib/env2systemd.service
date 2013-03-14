@@ -1,0 +1,12 @@
+[Unit]
+Description=Various events to systemd units
+After=NetworkManager.service upower.service \
+      acpid.socket acpid.service systemd-logind.service
+
+[Service]
+Type=notify
+Restart=always
+ExecStart=/usr/bin/env2systemd
+
+[Install]
+WantedBy=default.target
