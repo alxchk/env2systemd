@@ -19,10 +19,10 @@ int main(int argc, char *argv[])
 
     DBus::default_dispatcher = &dispatcher;
 
-    DBus::Connection system  = DBus::Connection::SystemBus();
-    DBus::Connection session = DBus::Connection::SessionBus();
-
     try {
+        DBus::Connection system  = DBus::Connection::SystemBus();
+        DBus::Connection session = DBus::Connection::SessionBus();
+
         auto p =
             policy((argc == 2 && argv[1] == instance_system)
                    ? system
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
                    system);
         dispatcher.enter();
     } catch (DBus::Error e) {
-        std::cerr << "Get unhandled DBus exception: " << e.message() << std::endl;
+        std::cerr << "Error: DBus (Global): " << e.message() << std::endl;
         return -1;
     }
 
