@@ -1,3 +1,5 @@
+#include <systemd/sd-daemon.h>
+
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -69,14 +71,14 @@ public:
     try {
       if (active) {
         _manager.StartUnit(unit, SYSTEMD_OVERRIDE);
-        std::cout << "NM Dispatch: start " << unit << std::endl;
+        std::cout << SD_INFO "NM Dispatch: start " << unit << std::endl;
       } else {
         _manager.StopUnit(unit, SYSTEMD_OVERRIDE);
-        std::cout << "NM Dispatch: stop " << unit << std::endl;
+        std::cout << SD_INFO "NM Dispatch: stop " << unit << std::endl;
       }
     }
     catch(DBus::Error e) {
-      std::cerr << "NM->Systemd DBus Error: " << e.message() << std::endl;
+      std::cerr << SD_WARNING "NM->Systemd DBus Error: " << e.message() << std::endl;
     }
   }
 
@@ -84,14 +86,14 @@ public:
     try {
       if (active) {
         _manager.StartUnit(_dispatch_global, SYSTEMD_OVERRIDE);
-        std::cout << "NM Dispatch: Enable networking" << std::endl;
+        std::cout << SD_INFO "NM Dispatch: Enable networking" << std::endl;
       } else {
         _manager.StopUnit(_dispatch_global, SYSTEMD_OVERRIDE);
-        std::cout << "NM Dispatch: Disable networking" << std::endl;
+        std::cout << SD_INFO "NM Dispatch: Disable networking" << std::endl;
       }
     }
     catch(DBus::Error e) {
-      std::cerr << "NM->Systemd DBus Error: " << e.message() << std::endl;
+      std::cerr << SD_WARNING "NM->Systemd DBus Error: " << e.message() << std::endl;
     }
   }
 };
@@ -115,14 +117,14 @@ public:
     try {
       if (state) {
         _manager.StartUnit(_battery_target, SYSTEMD_OVERRIDE);
-        std::cout << "UP: On Battery" << std::endl;
+        std::cout << SD_INFO "UP: On Battery" << std::endl;
       } else {
         _manager.StopUnit(_battery_target, SYSTEMD_OVERRIDE);
-        std::cout << "UP: Disable On Battery" << std::endl;
+        std::cout << SD_INFO "UP: Disable On Battery" << std::endl;
       }
     }
     catch(DBus::Error e) {
-      std::cerr << "UP->Systemd DBus Error: " << e.message() << std::endl;
+      std::cerr << SD_WARNING "UP->Systemd DBus Error: " << e.message() << std::endl;
     }
   }
 
@@ -130,14 +132,14 @@ public:
     try {
       if (state) {
         _manager.StartUnit(_low_battery_target, SYSTEMD_OVERRIDE);
-        std::cout << "UP: On Low Battery" << std::endl;
+        std::cout << SD_INFO "UP: On Low Battery" << std::endl;
       } else {
         _manager.StopUnit(_low_battery_target, SYSTEMD_OVERRIDE);
-        std::cout << "UP: Disable On Low Battery" << std::endl;
+        std::cout << SD_INFO "UP: Disable On Low Battery" << std::endl;
       }
     }
     catch(DBus::Error e) {
-      std::cerr << "UP->Systemd DBus Error: " << e.message() << std::endl;
+      std::cerr << SD_WARNING "UP->Systemd DBus Error: " << e.message() << std::endl;
     }
   }
 };
@@ -186,20 +188,16 @@ private:
             _manager.StopUnit(unit, SYSTEMD_OVERRIDE);
           }
         }
-      } else if (message[0].compare(0, video.size(), video) == 0) {
-      }
-      else {
-        std::cerr << "ACPI: Unknown <" << message[0] << "> ("
+      } else {
+        std::cerr << SD_INFO << "ACPI: Unknown <" << message[0] << "> ("
                   << message[1] << ", "
                   << message[2] << ", "
                   << message[3] << ")" << std::endl;
         return;
       }
+    } catch (const DBus::Error &e) {
+      std::cerr << SD_INFO "ACPI->SYSTEMD: DBus Error: " << e.message() << std::endl;
     }
-    catch (const DBus::Error &e) {
-      std::cerr << "ACPI->SYSTEMD: DBus Error: " << e.message() << std::endl;
-    }
-
   }
 
 private:
