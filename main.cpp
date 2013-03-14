@@ -20,14 +20,14 @@ int main(int argc, char *argv[])
     DBus::default_dispatcher = &dispatcher;
 
     try {
-        DBus::Connection system  = DBus::Connection::SystemBus();
-        DBus::Connection session = DBus::Connection::SessionBus();
+        DBus::Connection system = DBus::Connection::SystemBus();
+        DBus::Connection systemd =
+            (argc > 1 && instance_system == argv[1])
+            ? system
+            : DBus::Connection::SessionBus()
+            ;
 
-        auto p =
-            policy((argc == 2 && argv[1] == instance_system)
-                   ? system
-                   : session,
-                   system);
+        auto p = policy(systemd, system);
         dispatcher.enter();
     } catch (DBus::Error e) {
         std::cerr << "Error: DBus (Global): " << e.message() << std::endl;
