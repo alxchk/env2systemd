@@ -1,4 +1,4 @@
-PKGDEPS  := libsystemd-login dbus-c++-1
+PKGDEPS  := libsystemd-login libsystemd-daemon dbus-c++-1
 PKGDEPS_EXISTS := checkdeps
 
 OUTPUT   := env2systemd
