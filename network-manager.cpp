@@ -24,14 +24,20 @@ NetworkManager::Manager::~Manager()
   }
 }
 
-bool NetworkManager::Manager::isActive()
+bool NetworkManager::Manager::isActive(const std::string &id)
 {
-  return State() == NM_STATE_CONNECTED;
+  if (id == "")
+    return State() == NM_STATE_CONNECTED;
+  else
+    return __connectionStateByName(id) == NM_ACTIVE_CONNECTION_STATE_ACTIVATED;
 }
 
-bool NetworkManager::Manager::isActivating()
+bool NetworkManager::Manager::isActivating(const std::string &id)
 {
-  return State() == NM_STATE_CONNECTING;
+  if (id == "")
+    return State() == NM_STATE_CONNECTING;
+  else
+    return __connectionStateByName(id) == NM_ACTIVE_CONNECTION_STATE_ACTIVATING;
 }
 
 NetworkManager::ActiveConnection::ActiveConnection(DBus::Connection& connection,
@@ -82,6 +88,15 @@ void NetworkManager::Manager::StateChanged(const uint32_t& argin0) {
 }
 
 void NetworkManager::Manager::CheckPermissions() {
+}
+
+uint32_t NetworkManager::Manager::__connectionStateByName(const std::string &id) {
+  for (const auto &c : __tracked_connections) {
+    if (c.second.first == id)
+      return c.second.second->State();
+  }
+
+  return 0;
 }
 
 void NetworkManager::Manager::__triggerActiveConnection(::DBus::Path path, uint32_t state) {

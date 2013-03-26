@@ -55,8 +55,8 @@ namespace NetworkManager
             std::function<void (bool)>);
     ~Manager();
 
-    bool isActive();
-    bool isActivating();
+    bool isActive(const std::string &id = "");
+    bool isActivating(const std::string &id = "");
 
   protected:
     virtual void DeviceRemoved(const ::DBus::Path& argin0);
@@ -76,6 +76,7 @@ namespace NetworkManager
     void __registerActiveConnections(const std::vector< ::DBus::Path > &);
     void __triggerActiveConnection(::DBus::Path, uint32_t);
     void __processActiveConnection(const std::string&, uint32_t);
+    uint32_t __connectionStateByName(const std::string &id);
     std::string __nameActiveConnection(ActiveConnection *);
   };
 }

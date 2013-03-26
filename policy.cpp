@@ -228,25 +228,40 @@ public:
         }),
       _nm(system,
           [this](const std::string &id, bool active) {
-            this->_nd.TriggerNetwork(id, active);
+            if (active || !this->_eloop->is_running())
+              {
+                this->_nd.TriggerNetwork(id, active);
+                return;
+              }
+
+            auto timeout = Glib::TimeoutSource::create(DEFAULT_ACTION_TIMEOUT);
+            timeout->connect([id, this]() -> bool
+                             {
+                               if (this->_nm.isActivating(id))
+                                 return true;
+
+                               if(! this->_nm.isActive(id))
+                                 this->_nd.TriggerNetwork(id, false);
+
+                               return false;
+                             });
+            timeout->attach(this->_eloop->get_context());
           },
           [this](bool active) {
-            auto timeout = Glib::TimeoutSource::create(DEFAULT_ACTION_TIMEOUT);
             if (active || !this->_eloop->is_running())
               {
                 this->_nd.TriggerState(active);
                 return;
               }
 
-            if (this->_nm.isActivating())
-              return;
-
+            auto timeout = Glib::TimeoutSource::create(DEFAULT_ACTION_TIMEOUT);
             timeout->connect([this]() -> bool
                              {
                                if (this->_nm.isActivating())
                                  return true;
 
-                               this->_nd.TriggerState(this->_nm.isActive());
+                               if (! this->_nm.isActive())
+                                 this->_nd.TriggerState(false);
                                return false;
                              });
             timeout->attach(this->_eloop->get_context());
