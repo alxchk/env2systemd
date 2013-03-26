@@ -35,3 +35,7 @@
 #ifndef UNIT_ACPI_HKEY_TYPE
 #define UNIT_ACPI_HKEY_TYPE "target"
 #endif
+
+#ifndef DEFAULT_ACTION_TIMEOUT
+#define DEFAULT_ACTION_TIMEOUT 5000
+#endif

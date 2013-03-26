@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     DBus::default_dispatcher = &dispatcher;
 
     auto eloop = Glib::MainLoop::create(false);
-    dispatcher.attach(eloop->get_context()->gobj());
+    dispatcher.attach(NULL);
 
     const auto io_source = Glib::IOSource::create(sfd, Glib::IO_IN | Glib::IO_HUP);
     io_source->connect([sfd,eloop](const Glib::IOCondition c) -> bool
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
             : DBus::Connection::SessionBus()
             ;
 
-        auto p = policy(systemd, system);
+        auto p = policy(systemd, system, eloop);
 
         sd_notify(0, "READY=1");
         eloop->run();

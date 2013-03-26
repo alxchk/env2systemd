@@ -6,6 +6,8 @@
 #include <functional>
 #include <thread>
 
+#include <dbus-c++/glib-integration.h>
+
 #include "login1-manager.hpp"
 #include "upower1-manager.hpp"
 #include "systemd1-manager.hpp"
@@ -15,6 +17,7 @@
 #include "policy.hpp"
 
 #include "util.c"
+#include "__hacks.hpp"
 
 class SessionLockDispatch
 {
@@ -208,8 +211,10 @@ class DefaultPolicy : public Policy
 {
 public:
   DefaultPolicy(DBus::Connection &systemd_session,
-                DBus::Connection &system)
+                DBus::Connection &system,
+                Glib::RefPtr< Glib::MainLoop > eloop)
     : _manager(systemd_session),
+      _eloop(eloop),
       _lk(UNIT_LOCK_SESSION,
           _manager),
       _nd(UNIT_NETWORK_PLACE,
@@ -226,7 +231,25 @@ public:
             this->_nd.TriggerNetwork(id, active);
           },
           [this](bool active) {
-            this->_nd.TriggerState(active);
+            auto timeout = Glib::TimeoutSource::create(DEFAULT_ACTION_TIMEOUT);
+            if (active || !this->_eloop->is_running())
+              {
+                this->_nd.TriggerState(active);
+                return;
+              }
+
+            if (this->_nm.isActivating())
+              return;
+
+            timeout->connect([this]() -> bool
+                             {
+                               if (this->_nm.isActivating())
+                                 return true;
+
+                               this->_nd.TriggerState(this->_nm.isActive());
+                               return false;
+                             });
+            timeout->attach(this->_eloop->get_context());
           }),
     _upower1(system,
              [this](bool active) {
@@ -243,6 +266,9 @@ private:
   /* Services Control */
   Systemd1::Manager _manager;
 
+  /* Event loop */
+  Glib::RefPtr< Glib::MainLoop > _eloop;
+
   /* Dispatchers */
   SessionLockDispatch _lk;
   NetworkDispatch _nd;
@@ -257,7 +283,9 @@ private:
 };
 
 std::shared_ptr<Policy> policy(DBus::Connection &systemd_session,
-                               DBus::Connection &system)
+                               DBus::Connection &system,
+                               Glib::RefPtr< Glib::MainLoop > eloop)
 {
-  return std::shared_ptr<Policy>(new DefaultPolicy(systemd_session, system));
+  return std::shared_ptr<Policy>(new DefaultPolicy(systemd_session,
+                                                   system, eloop));
 }

@@ -55,6 +55,9 @@ namespace NetworkManager
             std::function<void (bool)>);
     ~Manager();
 
+    bool isActive();
+    bool isActivating();
+
   protected:
     virtual void DeviceRemoved(const ::DBus::Path& argin0);
     virtual void DeviceAdded(const ::DBus::Path& argin0);

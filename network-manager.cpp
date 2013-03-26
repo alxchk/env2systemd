@@ -11,7 +11,7 @@ NetworkManager::Manager::Manager(DBus::Connection &connection,
     __hook_network(hook_network),
     __hook_global(hook_global)
 {
-  __hook_global(State() == NM_STATE_CONNECTED);
+  __hook_global(isActive());
   __registerActiveConnections(ActiveConnections());
 }
 
@@ -22,6 +22,16 @@ NetworkManager::Manager::~Manager()
     __hook_network(c.second.first, false);
     delete c.second.second;
   }
+}
+
+bool NetworkManager::Manager::isActive()
+{
+  return State() == NM_STATE_CONNECTED;
+}
+
+bool NetworkManager::Manager::isActivating()
+{
+  return State() == NM_STATE_CONNECTING;
 }
 
 NetworkManager::ActiveConnection::ActiveConnection(DBus::Connection& connection,
