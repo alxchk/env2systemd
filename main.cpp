@@ -1,26 +1,53 @@
-#include <systemd/sd-daemon.h>
-
 #include <iostream>
-#include <dbus-c++/dbus.h>
-#include <sys/signal.h>
+#include <glibmm.h>
+#include <dbus-c++/glib-integration.h>
 #include <cstring>
 
+#include <systemd/sd-daemon.h>
+#include <sys/signalfd.h>
+#include <unistd.h>
+
 #include "policy.hpp"
-
-DBus::BusDispatcher dispatcher;
-
-void terminate(int sig) {
-    dispatcher.leave();
-}
+#include "__hacks.hpp"
 
 int main(int argc, char *argv[])
 {
-    signal(SIGINT, terminate);
-    signal(SIGTERM, terminate);
-
     static const std::string instance_system = "--system";
+    sigset_t handled_signals;
+    sigemptyset(&handled_signals);
+    sigaddset(&handled_signals, SIGTERM);
+    sigaddset(&handled_signals, SIGINT);
 
+    const int sfd = signalfd(-1, &handled_signals, SFD_NONBLOCK | SFD_CLOEXEC);
+    if (sfd == -1)
+        return 1;
+
+    if (sigprocmask(SIG_BLOCK, &handled_signals, NULL) == -1)
+        return 1;
+
+    DBus::Glib::BusDispatcher dispatcher;
     DBus::default_dispatcher = &dispatcher;
+
+    auto eloop = Glib::MainLoop::create(false);
+    dispatcher.attach(eloop->get_context()->gobj());
+
+    const auto io_source = Glib::IOSource::create(sfd, Glib::IO_IN | Glib::IO_HUP);
+    io_source->connect([sfd,eloop](const Glib::IOCondition c) -> bool
+                       {
+                           struct signalfd_siginfo fdsi;
+                           ssize_t s;
+
+                           s = ::read(sfd, &fdsi, sizeof(struct signalfd_siginfo));
+                           assert(s == sizeof(struct signalfd_siginfo));
+
+                           std::cerr << SD_NOTICE "Exiting with signal ("
+                                     << fdsi.ssi_signo << ")"
+                                     << std::endl;
+
+                           eloop->quit();
+                           return true;
+                       });
+    io_source->attach(eloop->get_context());
 
     auto r = sd_booted();
 
@@ -60,7 +87,7 @@ int main(int argc, char *argv[])
         auto p = policy(systemd, system);
 
         sd_notify(0, "READY=1");
-        dispatcher.enter();
+        eloop->run();
     } catch (DBus::Error e) {
         std::cerr << SD_ERR << "Error: DBus (Global): " << e.message() << std::endl;
         sd_notifyf(0,
