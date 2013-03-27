@@ -155,18 +155,13 @@ public:
   {}
 
 public:
-  void thread() {
-    std::thread([this](){
-        Acpi::Manager([this](const std::vector<std::string> &message) {
-            this->dispatch(message);
-          }).dispatch();
-      }).detach();
-  }
-
-private:
   void dispatch(const std::vector<std::string> &message)
   {
-    if (message.size() != 4) return;
+    if (message.size() != 4) {
+      std::cerr << SD_ERR "ACPI Dispatch: malformed ACPI message"
+                << std::endl;
+      return;
+    }
 
     const static std::string button = "button";
     const static std::string video = "video";
@@ -223,6 +218,7 @@ public:
       _up(UNIT_ON_BATTERY,
           UNIT_ON_LOW_BATTERY,
           _manager),
+      _ad(_manager),
       _login1(system, [this](bool locked) {
           this->_lk.TriggerLock(locked);
         }),
@@ -277,9 +273,14 @@ public:
              [this](bool active) {
                this->_up.on_low_battery(active);
              }),
-    _ad(_manager) {
-    _ad.thread();
-  }
+   _acpi([this](const std::vector<std::string> & message)
+         {
+           this->_ad.dispatch(message);
+         })
+  {}
+
+  //   _ad.thread();
+  // }
 
 private:
   /* Services Control */
@@ -298,7 +299,7 @@ private:
   Login1::Manager _login1;
   NetworkManager::Manager _nm;
   UPower1::Manager _upower1;
-
+  Acpi::Manager _acpi;
 };
 
 std::shared_ptr<Policy> policy(DBus::Connection &systemd_session,
