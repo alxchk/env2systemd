@@ -230,41 +230,45 @@ public:
           [this](const std::string &id, bool active) {
             if (active || !this->_eloop->is_running())
               {
+                std::cerr << SD_DEBUG "Network " << id << ": Forsing status" << std::endl;
                 this->_nd.TriggerNetwork(id, active);
                 return;
               }
 
-            auto timeout = Glib::TimeoutSource::create(DEFAULT_ACTION_TIMEOUT);
-            timeout->connect([id, this]() -> bool
-                             {
-                               if (this->_nm.isActivating(id))
-                                 return true;
+            Glib::signal_timeout()
+                .connect([id, this]() -> bool
+                         {
+                           std::cerr << SD_DEBUG "Network " << id << ": Timeout passed" << std::endl;
+                           if (this->_nm.isActivating(id))
+                             return true;
 
-                               if(! this->_nm.isActive(id))
-                                 this->_nd.TriggerNetwork(id, false);
+                           std::cerr << SD_DEBUG "Network " << id << ": Forsing status" << std::endl;
+                           if(! this->_nm.isActive(id))
+                             this->_nd.TriggerNetwork(id, false);
 
-                               return false;
-                             });
-            timeout->attach(this->_eloop->get_context());
+                           return false;
+                         }, DEFAULT_ACTION_TIMEOUT);
           },
           [this](bool active) {
             if (active || !this->_eloop->is_running())
               {
+                std::cerr << SD_DEBUG "Global: Forsing status" << std::endl;
                 this->_nd.TriggerState(active);
                 return;
               }
 
-            auto timeout = Glib::TimeoutSource::create(DEFAULT_ACTION_TIMEOUT);
-            timeout->connect([this]() -> bool
-                             {
-                               if (this->_nm.isActivating())
-                                 return true;
+            Glib::signal_timeout()
+                .connect([this]() -> bool
+                         {
+                           std::cerr << SD_DEBUG "Global: Timeout passed" << std::endl;
+                           if (this->_nm.isActivating())
+                             return true;
 
-                               if (! this->_nm.isActive())
-                                 this->_nd.TriggerState(false);
-                               return false;
-                             });
-            timeout->attach(this->_eloop->get_context());
+                           std::cerr << SD_DEBUG "Global: Forsing status" << std::endl;
+                           if (! this->_nm.isActive())
+                             this->_nd.TriggerState(false);
+                           return false;
+                         }, DEFAULT_ACTION_TIMEOUT);
           }),
     _upower1(system,
              [this](bool active) {
