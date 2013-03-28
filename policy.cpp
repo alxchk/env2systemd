@@ -273,9 +273,6 @@ public:
          })
   {}
 
-  //   _ad.thread();
-  // }
-
 private:
   /* Services Control */
   Systemd1::Manager _manager;
