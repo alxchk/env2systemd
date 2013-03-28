@@ -226,7 +226,6 @@ public:
           [this](const std::string &id, bool active) {
             if (active || !this->_eloop->is_running())
               {
-                std::cerr << SD_DEBUG "Network " << id << ": Forsing status" << std::endl;
                 this->_nd.TriggerNetwork(id, active);
                 return;
               }
@@ -234,11 +233,9 @@ public:
             Glib::signal_timeout()
                 .connect([id, this]() -> bool
                          {
-                           std::cerr << SD_DEBUG "Network " << id << ": Timeout passed" << std::endl;
                            if (this->_nm.isActivating(id))
                              return true;
 
-                           std::cerr << SD_DEBUG "Network " << id << ": Forsing status" << std::endl;
                            if(! this->_nm.isActive(id))
                              this->_nd.TriggerNetwork(id, false);
 
@@ -248,7 +245,6 @@ public:
           [this](bool active) {
             if (active || !this->_eloop->is_running())
               {
-                std::cerr << SD_DEBUG "Global: Forsing status" << std::endl;
                 this->_nd.TriggerState(active);
                 return;
               }
@@ -256,11 +252,9 @@ public:
             Glib::signal_timeout()
                 .connect([this]() -> bool
                          {
-                           std::cerr << SD_DEBUG "Global: Timeout passed" << std::endl;
                            if (this->_nm.isActivating())
                              return true;
 
-                           std::cerr << SD_DEBUG "Global: Forsing status" << std::endl;
                            if (! this->_nm.isActive())
                              this->_nd.TriggerState(false);
                            return false;
