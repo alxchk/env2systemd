@@ -157,7 +157,7 @@ public:
 public:
   void dispatch(const std::vector<std::string> &message)
   {
-    if (message.size() != 4) {
+    if (message.size() < 4) {
       std::cerr << SD_ERR "ACPI Dispatch: malformed ACPI message"
                 << std::endl;
       return;
