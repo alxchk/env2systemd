@@ -1,5 +1,8 @@
 #include <systemd/sd-login.h>
 #include <exception>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "login1-manager.hpp"
 
 Login1::Session::Session(DBus::Connection &connection,
