@@ -158,8 +158,8 @@ public:
   void dispatch(const std::vector<std::string> &message)
   {
     if (message.size() < 4) {
-      std::cerr << SD_ERR "ACPI Dispatch: malformed ACPI message"
-                << std::endl;
+      std::cerr << SD_ERR "ACPI Dispatch: malformed ACPI message, elems: " <<
+          message.size() << std::endl;
       return;
     }
 
@@ -169,6 +169,7 @@ public:
 
     try {
       if ((message[0].compare(0, button.size(), button) == 0) ||
+          (message[0].compare(0, video.size(), video) == 0) ||
           (message[1] == "HKEY")) {
         if (message[1].compare(0, lid.size(), lid) == 0) {
           if(std::stoi(message[3]) & 1) {

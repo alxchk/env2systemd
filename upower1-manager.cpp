@@ -10,10 +10,8 @@ UPower1::Manager::Manager(DBus::Connection &connection,
     __low_battery_hook(low_battery_hook)
 {
   __last_battery = OnBattery();
-  __last_low_battery = OnLowBattery();
 
   battery_hook(__last_battery);
-  low_battery_hook(__last_low_battery);
 }
 
 void UPower1::Manager::DeviceAdded(const ::DBus::Path& device)
@@ -28,16 +26,10 @@ void UPower1::Manager::DeviceChanged(const ::DBus::Path& device)
 void UPower1::Manager::Changed()
 {
   bool battery = OnBattery();
-  bool low_battery = OnLowBattery();
 
   if (battery != __last_battery) {
     __last_battery = battery;
     __battery_hook(__last_battery);
-  }
-
-  if (low_battery != __last_low_battery) {
-    __last_low_battery = low_battery;
-    __low_battery_hook(__last_low_battery);
   }
 }
 

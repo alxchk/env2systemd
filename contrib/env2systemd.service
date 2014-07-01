@@ -2,6 +2,7 @@
 Description=Various events to systemd units
 After=NetworkManager.service upower.service \
       acpid.socket acpid.service systemd-logind.service
+Requires=upower.service
 
 [Service]
 Type=notify
