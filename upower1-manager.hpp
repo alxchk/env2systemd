@@ -3,6 +3,7 @@
 #include <functional>
 #include <dbus-c++/dbus.h>
 #include "upower1-proxy.hpp"
+#include "dbus-properties-proxy.hpp"
 
 namespace UPower1 {
   static const char BUS[] = "org.freedesktop.UPower";
@@ -10,6 +11,7 @@ namespace UPower1 {
 
   class Manager
     : public org::freedesktop::UPower_proxy,
+      public org::freedesktop::DBus::Properties_proxy,
       public DBus::ObjectProxy
   {
     std::function<void (bool)> __battery_hook;
@@ -26,11 +28,6 @@ namespace UPower1 {
   protected:
     virtual void DeviceAdded(const ::DBus::Path& device);
     virtual void DeviceRemoved(const ::DBus::Path& device);
-    virtual void DeviceChanged(const ::DBus::Path& device);
-    virtual void Changed();
-    virtual void Sleeping();
-    virtual void NotifySleep(const std::string& action);
-    virtual void Resuming();
-    virtual void NotifyResume(const std::string& action);
+    virtual void PropertiesChanged();
   };
 }

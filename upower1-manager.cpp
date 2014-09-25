@@ -20,10 +20,7 @@ void UPower1::Manager::DeviceAdded(const ::DBus::Path& device)
 void UPower1::Manager::DeviceRemoved(const ::DBus::Path& device)
 {}
 
-void UPower1::Manager::DeviceChanged(const ::DBus::Path& device)
-{}
-
-void UPower1::Manager::Changed()
+void UPower1::Manager::PropertiesChanged()
 {
   bool battery = OnBattery();
 
@@ -32,16 +29,3 @@ void UPower1::Manager::Changed()
     __battery_hook(__last_battery);
   }
 }
-
-/* Deprecated */
-void UPower1::Manager::Sleeping()
-{}
-
-void UPower1::Manager::Resuming()
-{}
-
-void UPower1::Manager::NotifySleep(const std::string& reason)
-{}
-
-void UPower1::Manager::NotifyResume(const std::string& reason)
-{}
