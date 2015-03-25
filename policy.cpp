@@ -180,7 +180,7 @@ public:
             _manager.StopUnit(UNIT_ACPI_LID, SYSTEMD_OVERRIDE);
           }
         } else {
-          std::string unit = UNIT_ACPI_HKEY "-" + message[2] + "-" + message[3] + "." UNIT_ACPI_HKEY_TYPE;
+          std::string unit = UNIT_ACPI_HKEY "-" + message[1] + "." UNIT_ACPI_HKEY_TYPE;
           if (_manager.getUnit(unit).ActiveState() != "active") {
             _manager.StartUnit(unit, SYSTEMD_OVERRIDE);
           } else {
