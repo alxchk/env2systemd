@@ -117,10 +117,11 @@ void NetworkManager::Manager::__triggerActiveConnection(::DBus::Path path, uint3
 
 std::string NetworkManager::Manager::__nameActiveConnection(ActiveConnection * c) {
     try {
-      return std::string(static_cast<
-        const std::string&>(NetworkManager::Settings(__connection,
-                                              c->Connection()
-                                                     ).GetSettings()["connection"]["id"]));
+      std::cerr << "c->Connection(): " << c->Connection() << std::endl;
+      auto settings = NetworkManager::Settings(__connection,
+                                               c->Connection()
+                                               ).GetSettings();
+      return std::string(static_cast<const std::string&>(settings["connection"]["id"]));
     }
     catch (DBus::Error e) {
       return "";

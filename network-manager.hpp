@@ -21,6 +21,7 @@ namespace NetworkManager
   protected:
     virtual void Removed() {}
     virtual void Updated() {}
+	void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties) {}
   };
 
   class ActiveConnection
