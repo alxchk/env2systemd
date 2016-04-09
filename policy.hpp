@@ -2,8 +2,8 @@
 #include "config.h"
 #include <memory>
 
-#include <dbus-c++/glib-integration.h>
 #include <glibmm.h>
+#include <dbus-c++/glib-integration.h>
 
 class Policy
 {

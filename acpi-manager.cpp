@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 #include "config.h"
-#include "__hacks.hpp"
 
 Acpi::Manager::Manager(std::function<void (const std::vector<std::string> &)> dispatch)
     : _stream(NULL), _dispatch(dispatch)

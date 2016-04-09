@@ -6,6 +6,7 @@
 #include <functional>
 #include <thread>
 
+#include <glibmm.h>
 #include <dbus-c++/glib-integration.h>
 
 #include "login1-manager.hpp"
@@ -17,7 +18,8 @@
 #include "policy.hpp"
 
 #include "util.c"
-#include "__hacks.hpp"
+
+
 
 class SessionLockDispatch
 {
