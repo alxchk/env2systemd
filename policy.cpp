@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <functional>
 #include <thread>
+#include <sstream>
+#include <vector>
 
 #include <glibmm.h>
 #include <dbus-c++/glib-integration.h>
@@ -18,7 +20,6 @@
 #include "policy.hpp"
 
 #include "util.c"
-
 
 
 class SessionLockDispatch
@@ -159,30 +160,54 @@ public:
 public:
   void dispatch(const std::vector<std::string> &message)
   {
-    if (message.size() < 4) {
+    if (message.size() < 3) {
       std::cerr << SD_ERR "ACPI Dispatch: malformed ACPI message, elems: " <<
           message.size() << std::endl;
       return;
     }
 
+    std::string klass(message[0]);
+    std::string subklass;
+    std::string object;
+    std::string action;
+
+    if (message.size() == 3) {
+        size_t pos = klass.find('/');
+        if (pos == std::string::npos) {
+          subklass = "";
+        } else {
+          subklass = klass.substr(pos+1);
+          klass = klass.substr(0, pos);
+        }
+        object = message[1];
+        action = message[2];
+    } else {
+        subklass = message[1];
+        object = message[2];
+        action = message[3];
+    }
+
     const static std::string button = "button";
     const static std::string video = "video";
-    const static std::string lid = "LID";
+    const static std::string lid = "lid";
+    const static std::string hkey = "hkey";
+    const static std::string open = "open";
+    const static std::string close = "close";
 
     try {
-      if ((message[0].compare(0, button.size(), button) == 0) ||
-          (message[0].compare(0, video.size(), video) == 0) ||
-          (message[1] == "HKEY")) {
-        if (message[1].compare(0, lid.size(), lid) == 0) {
-          if(std::stoi(message[3]) & 1) {
+      if (cmpstr(klass, button) == 0 || cmpstr(klass, video) == 0 || cmpstr(subklass, hkey)) {
+        if (cmpstr(subklass, lid)) {
+          if(cmpstr(action, open)) {
             /* LID close */
+            std::cerr << SD_INFO "ACPI->SYSTEMD: LID OPENED" << std::endl;
             _manager.StartUnit(UNIT_ACPI_LID, SYSTEMD_OVERRIDE);
           } else {
             /* Lid open */
+            std::cerr << SD_INFO "ACPI->SYSTEMD: LID CLOSED" << std::endl;
             _manager.StopUnit(UNIT_ACPI_LID, SYSTEMD_OVERRIDE);
           }
         } else {
-          std::string unit = UNIT_ACPI_HKEY "-" + message[1] + "." UNIT_ACPI_HKEY_TYPE;
+          std::string unit = UNIT_ACPI_HKEY "-" + subklass + "." UNIT_ACPI_HKEY_TYPE;
           if (_manager.getUnit(unit).ActiveState() != "active") {
             _manager.StartUnit(unit, SYSTEMD_OVERRIDE);
           } else {
@@ -190,10 +215,10 @@ public:
           }
         }
       } else {
-        std::cerr << SD_INFO << "ACPI: Unknown <" << message[0] << "> ("
-                  << message[1] << ", "
-                  << message[2] << ", "
-                  << message[3] << ")" << std::endl;
+        std::cerr << SD_INFO << "ACPI: Unknown <" << klass << "> ("
+                  << subklass << ", "
+                  << object << ", "
+                  << action << ")" << std::endl;
         return;
       }
     } catch (const DBus::Error &e) {
