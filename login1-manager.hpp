@@ -3,6 +3,8 @@
 #include <functional>
 #include <dbus-c++/dbus.h>
 #include <sys/types.h>
+
+#include "systemd1-manager.hpp"
 #include "login1-proxy.hpp"
 #include "login1-session-proxy.hpp"
 
@@ -32,10 +34,15 @@ namespace Login1
       public DBus::ObjectProxy
   {
     Session * __current_session;
+    Systemd1::Manager & _manager;
 
   public:
-    Manager(DBus::Connection &connection,
-            std::function<void (bool)> lock_hook);
+    Manager(
+      Systemd1::Manager & _manager,
+      DBus::Connection &connection,
+      std::function<void (bool)> lock_hook
+    );
+
     ~Manager();
 
   protected:
@@ -49,6 +56,6 @@ namespace Login1
     virtual void PrepareForSleep(const bool&) {}
 
   private:
-    Session __getCurrentSession();
+    std::string __getCurrentSession();
   };
 }
