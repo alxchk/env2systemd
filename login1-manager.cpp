@@ -5,6 +5,10 @@
 
 #include "login1-manager.hpp"
 
+Login1::User::User(DBus::Connection &connection)
+    : DBus::ObjectProxy(connection, Login1::SELF, Login1::BUS)
+{}
+
 Login1::Session::Session(DBus::Connection &connection,
                          DBus::Path path,
                          std::function<void (bool)> lock_hook)
@@ -33,7 +37,7 @@ Login1::Manager::Manager(
       __current_session(NULL),
       _manager(_manager)
 {
-    std::string session = this->__getCurrentSession();
+    std::string session = this->__getCurrentSession(connection);
     if (session.empty()) {
         std::cerr << "Login1: Couldn't find active session" << std::endl;
         return;
@@ -49,32 +53,9 @@ Login1::Manager::Manager(
     }
 }
 
-std::string Login1::Manager::__getCurrentSession() {
-    char * session = getenv("XDG_SESSION_ID");
-    if (session != NULL) {
-        return std::string(session);
-    }
-
-    int rval = sd_pid_get_session(getpid(), &session);
-    if (!rval) {
-        std::string s_session = std::string(session);
-        free(session);
-        return s_session;
-    }
-
-    for (std::string environ: _manager.Environment()) {
-        size_t split = environ.find('=');
-
-        if (split == std::string::npos)
-            continue;
-
-        if (environ.compare(0, split, "XDG_SESSION_ID") != 0)
-            continue;
-
-        return environ.substr(split+1);
-    }
-
-    return std::string();
+std::string Login1::Manager::__getCurrentSession(DBus::Connection &connection) {
+    Login1::User self = Login1::User(connection);
+    return self.Display()._1;
 }
 
 Login1::Manager::~Manager()

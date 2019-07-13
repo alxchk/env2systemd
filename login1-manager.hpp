@@ -7,11 +7,21 @@
 #include "systemd1-manager.hpp"
 #include "login1-proxy.hpp"
 #include "login1-session-proxy.hpp"
+#include "login1-user-proxy.hpp"
 
 namespace Login1
 {
   static const char BUS[]       = "org.freedesktop.login1";
   static const char OBJECT[]    = "/org/freedesktop/login1";
+  static const char SELF[]      = "/org/freedesktop/login1/user/self";
+
+  class User
+    : public org::freedesktop::login1::User_proxy,
+      public DBus::ObjectProxy
+  {
+  public:
+    User(DBus::Connection &connection);
+  };
 
   class Session
     : public org::freedesktop::login1::Session_proxy,
@@ -56,6 +66,6 @@ namespace Login1
     virtual void PrepareForSleep(const bool&) {}
 
   private:
-    std::string __getCurrentSession();
+    std::string __getCurrentSession(DBus::Connection &connection);
   };
 }

@@ -13,6 +13,7 @@ PROXIES  := systemd1-manager-proxy.hpp \
 		systemd1-manager-unit-proxy.hpp \
 		login1-proxy.hpp \
 		login1-session-proxy.hpp \
+		login1-user-proxy.hpp \
 		network-manager-proxy.hpp \
 		network-manager-settings-proxy.hpp \
 		network-manager-active-connection-proxy.hpp \
@@ -36,6 +37,9 @@ login1-proxy.hpp: introspection/org.freedesktop.login1.xml
 	dbusxx-xml2cpp $< --proxy=$@
 
 login1-session-proxy.hpp: introspection/org.freedesktop.login1.Session.xml
+	dbusxx-xml2cpp $< --proxy=$@
+
+login1-user-proxy.hpp: introspection/org.freedesktop.login1.User.xml
 	dbusxx-xml2cpp $< --proxy=$@
 
 upower1-proxy.hpp: introspection/org.freedesktop.UPower.xml
