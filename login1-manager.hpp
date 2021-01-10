@@ -74,9 +74,9 @@ namespace Login1
   {
     Systemd1::Manager & _manager;
     DBus::Connection & _connection;
-    User __current_user;
     std::function<void (bool)> __dock_hook;
     bool __is_docked;
+    User *__current_user;
 
   public:
     Manager(

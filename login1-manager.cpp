@@ -1,4 +1,5 @@
 #include <systemd/sd-login.h>
+#include <systemd/sd-daemon.h>
 #include <exception>
 #include <sys/types.h>
 #include <unistd.h>
@@ -77,10 +78,16 @@ Login1::Manager::Manager(
                         Login1::BUS),
       _manager(_manager),
       _connection(connection),
-      __current_user(connection, lock_hook),
       __dock_hook(dock_hook),
-      __is_docked(Docked())
-{}
+      __is_docked(Docked()),
+      __current_user(nullptr)
+{
+    try {
+        this->__current_user = new User(connection, lock_hook);
+    } catch (DBus::Error e) {
+        std::cerr << SD_ERR << "Error: DBus (Login1): " << e.message() << std::endl;
+    }
+}
 
 void Login1::Manager::update() {
     bool current_is_docked = Docked();
@@ -96,16 +103,27 @@ void Login1::Manager::SessionNew(const std::string &session, const DBus::Path &o
     auto uid = sobj.User()._1;
     std::cerr << "New session (global) " << session << "; uid: " << uid << std::endl;
     if (uid == getuid()) {
-        std::cerr << "Handle new session: " << session << std::endl;
-        __current_user.add(object);
-    }    
+        if (this->__current_user) {
+            std::cerr << "Handle new session: " << session << std::endl;
+            __current_user->add(object);
+        } else {
+            std::cerr << "Handle new session: current user is not tracked" << std::endl;
+        }
+    }
 }
-    
+
 void Login1::Manager::SessionRemoved(const std::string &session, const DBus::Path &object)
 {
-    std::cerr << "Removed session (global)" << session << std::endl;
-    __current_user.remove(object);
+    if (this->__current_user) {
+        std::cerr << "Removed session (global)" << session << std::endl;
+        __current_user->remove(object);
+    }
 }
 
 Login1::Manager::~Manager()
-{}
+{
+    if (this->__current_user) {
+        delete this->__current_user;
+        this->__current_user = nullptr;
+    }
+}
