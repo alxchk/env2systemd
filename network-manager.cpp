@@ -1,4 +1,4 @@
-#include <NetworkManager/NetworkManager.h>
+#include <NetworkManager.h>
 #include <algorithm>
 #include <exception>
 #include "network-manager.hpp"
@@ -27,7 +27,7 @@ NetworkManager::Manager::~Manager()
 bool NetworkManager::Manager::isActive(const std::string &id)
 {
   if (id == "")
-    return State() == NM_STATE_CONNECTED;
+    return State() == NM_STATE_CONNECTED_GLOBAL;
   else
     return __connectionStateByName(id) == NM_ACTIVE_CONNECTION_STATE_ACTIVATED;
 }
@@ -76,7 +76,7 @@ void NetworkManager::Manager::PropertiesChanged(const std::map< std::string, ::D
 
 void NetworkManager::Manager::StateChanged(const uint32_t& argin0) {
   switch(argin0) {
-  case NM_STATE_CONNECTED:
+  case NM_STATE_CONNECTED_GLOBAL:
     __hook_global(true);
     break;
   case NM_STATE_DISCONNECTING:

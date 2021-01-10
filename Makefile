@@ -1,4 +1,4 @@
-PKGDEPS  := libsystemd libsystemd dbus-c++-glib-1 glibmm-2.4 NetworkManager
+PKGDEPS  := libsystemd libsystemd dbus-c++-glib-1 glibmm-2.4 libnm
 PKGDEPS_EXISTS := checkdeps
 
 OUTPUT   := env2systemd
