@@ -8,12 +8,16 @@
 #define UNIT_LOCK_SESSION   "lock.target"
 #endif
 
+#ifndef UNIT_DOCK_SESSION
+#define UNIT_DOCK_SESSION   "dock.target"
+#endif
+
 #ifndef UNIT_NETWORK_PLACE
 #define UNIT_NETWORK_PLACE  "network@%i.target"
 #endif
 
 #ifndef UNIT_NETWORK_STATE
-#define UNIT_NETWORK_STATE  "network.target"
+#define UNIT_NETWORK_STATE  "network-online.target"
 #endif
 
 #ifndef UNIT_ON_BATTERY

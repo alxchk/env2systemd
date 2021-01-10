@@ -16,7 +16,7 @@ UPower1::Manager::Manager(DBus::Connection &connection,
 
 void UPower1::Manager::DeviceAdded(const ::DBus::Path& device)
 {}
-
+  
 void UPower1::Manager::DeviceRemoved(const ::DBus::Path& device)
 {}
 

@@ -5,9 +5,49 @@
 
 #include "login1-manager.hpp"
 
-Login1::User::User(DBus::Connection &connection)
-    : DBus::ObjectProxy(connection, Login1::SELF, Login1::BUS)
-{}
+Login1::User::User(DBus::Connection &connection, std::function<void (bool)> lock_hook)
+    : DBus::ObjectProxy(connection, Login1::SELF, Login1::BUS),
+    _connection(connection),
+    __lock_hook(lock_hook)
+{
+    for (auto session: Sessions()) {
+        std::cerr << "Handle new session: " << session._1 << std::endl;
+        __handled_sessions.push_back(
+            new Session(_connection, session._2, __lock_hook)
+        );
+    }
+}
+
+void Login1::User::add(const DBus::Path &new_session) {
+    for (auto session: __handled_sessions) {
+        if (session->path() == new_session) {
+            return;
+        }
+    }
+
+    std::cerr << "Handle new session: " << new_session << std::endl;
+    __handled_sessions.push_back(
+        new Session(_connection, new_session, __lock_hook)
+    );
+}
+
+void Login1::User::remove(const DBus::Path &removed_session) {
+    for (auto session: __handled_sessions) {
+        if (session->path() == removed_session) {
+            std::cerr << "Remove handled session " << removed_session << std::endl;
+            delete session;
+            __handled_sessions.remove(session);
+            return;
+        }
+    }
+}
+
+Login1::User::~User() {
+    for (auto handled_session: __handled_sessions) {
+        delete handled_session;
+    }
+    __handled_sessions.clear();
+}
 
 Login1::Session::Session(DBus::Connection &connection,
                          DBus::Path path,
@@ -30,36 +70,42 @@ void Login1::Session::Unlock() {
 
 Login1::Manager::Manager(
     Systemd1::Manager & _manager, DBus::Connection &connection,
-    std::function<void (bool)> lock_hook)
+    std::function<void (bool)> lock_hook,
+    std::function<void (bool)> dock_hook)
     : DBus::ObjectProxy(connection,
                         Login1::OBJECT,
                         Login1::BUS),
-      __current_session(NULL),
-      _manager(_manager)
-{
-    std::string session = this->__getCurrentSession(connection);
-    if (session.empty()) {
-        std::cerr << "Login1: Couldn't find active session" << std::endl;
-        return;
-    }
+      _manager(_manager),
+      _connection(connection),
+      __current_user(connection, lock_hook),
+      __dock_hook(dock_hook),
+      __is_docked(Docked())
+{}
 
-    std::cerr << "Login1: attach to session: " << session << std::endl;
-
-    try {
-        __current_session = new Session(connection, GetSession(session), lock_hook);
-    }
-    catch (const std::exception &e) {
-        std::cerr << "Login1: Error: " <<  e.what() << std::endl;
+void Login1::Manager::update() {
+    bool current_is_docked = Docked();
+    if (current_is_docked != __is_docked) {
+        __dock_hook(current_is_docked);
+        __is_docked = current_is_docked;
     }
 }
 
-std::string Login1::Manager::__getCurrentSession(DBus::Connection &connection) {
-    Login1::User self = Login1::User(connection);
-    return self.Display()._1;
+void Login1::Manager::SessionNew(const std::string &session, const DBus::Path &object)
+{
+    SessionViewOnly sobj = SessionViewOnly(_connection, object);
+    auto uid = sobj.User()._1;
+    std::cerr << "New session (global) " << session << "; uid: " << uid << std::endl;
+    if (uid == getuid()) {
+        std::cerr << "Handle new session: " << session << std::endl;
+        __current_user.add(object);
+    }    
+}
+    
+void Login1::Manager::SessionRemoved(const std::string &session, const DBus::Path &object)
+{
+    std::cerr << "Removed session (global)" << session << std::endl;
+    __current_user.remove(object);
 }
 
 Login1::Manager::~Manager()
-{
-    if (__current_session)
-        delete __current_session;
-}
+{}

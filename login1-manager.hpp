@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <list>
 #include <dbus-c++/dbus.h>
 #include <sys/types.h>
 
@@ -14,14 +15,6 @@ namespace Login1
   static const char BUS[]       = "org.freedesktop.login1";
   static const char OBJECT[]    = "/org/freedesktop/login1";
   static const char SELF[]      = "/org/freedesktop/login1/user/self";
-
-  class User
-    : public org::freedesktop::login1::User_proxy,
-      public DBus::ObjectProxy
-  {
-  public:
-    User(DBus::Connection &connection);
-  };
 
   class Session
     : public org::freedesktop::login1::Session_proxy,
@@ -39,33 +32,73 @@ namespace Login1
     virtual void Unlock();
   };
 
+  class SessionViewOnly
+    : public org::freedesktop::login1::Session_proxy,
+      public DBus::ObjectProxy
+  {
+
+  public:
+    SessionViewOnly(DBus::Connection &connection,
+            DBus::Path path)
+    : DBus::ObjectProxy(connection, path, Login1::BUS)
+    {};
+
+  protected:
+    virtual void Lock() {};
+    virtual void Unlock() {};
+  };
+
+
+  class User
+    : public org::freedesktop::login1::User_proxy,
+      public DBus::ObjectProxy
+  {
+    DBus::Connection &_connection;
+    std::function<void (bool)> __lock_hook;
+    std::list<Session*> __handled_sessions;
+
+  public:
+    User(
+      DBus::Connection &connection,
+      std::function<void (bool)> lock_hook
+    );
+    ~User();
+
+    void add(const DBus::Path &session);
+    void remove(const DBus::Path &session);
+  };
+
   class Manager
     : public org::freedesktop::login1::Manager_proxy,
       public DBus::ObjectProxy
   {
-    Session * __current_session;
     Systemd1::Manager & _manager;
+    DBus::Connection & _connection;
+    User __current_user;
+    std::function<void (bool)> __dock_hook;
+    bool __is_docked;
 
   public:
     Manager(
       Systemd1::Manager & _manager,
       DBus::Connection &connection,
-      std::function<void (bool)> lock_hook
+      std::function<void (bool)> lock_hook,
+      std::function<void (bool)> dock_hook
     );
+
+    void update();
 
     ~Manager();
 
   protected:
-    virtual void SessionNew(const std::string&, const DBus::Path&) {}
-    virtual void SessionRemoved(const std::string&, const DBus::Path&) {}
+    virtual void SessionNew(const std::string&, const DBus::Path&);
+    virtual void SessionRemoved(const std::string&, const DBus::Path&);
+
     virtual void UserNew(const uint32_t&, const DBus::Path&) {}
     virtual void UserRemoved(const uint32_t&, const DBus::Path&) {}
     virtual void SeatNew(const std::string&, const DBus::Path&) {}
     virtual void SeatRemoved(const std::string&, const DBus::Path&) {}
     virtual void PrepareForShutdown(const bool&) {}
     virtual void PrepareForSleep(const bool&) {}
-
-  private:
-    std::string __getCurrentSession(DBus::Connection &connection);
   };
 }

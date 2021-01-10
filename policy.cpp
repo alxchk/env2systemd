@@ -47,6 +47,33 @@ public:
   }
 };
 
+class DockDispatch
+{
+  std::string          _dock_target;
+  Systemd1::Manager & _manager;
+
+public:
+  DockDispatch(const char * const dock_target, Systemd1::Manager & manager)
+    : _dock_target(dock_target),
+      _manager(manager)
+  {}
+
+public:
+  void TriggerDock(bool docked) {
+    try {
+      if (docked) {
+        std::cerr << "System docked" << std::endl;
+        _manager.StartUnit(_dock_target, SYSTEMD_OVERRIDE);
+      } else {
+        std::cerr << "System undocked" << std::endl;
+        _manager.StopUnit(_dock_target, SYSTEMD_OVERRIDE);
+      }
+    } catch(DBus::Error e) {
+      std::cerr << "DockDispatch->Systemd DBus Error: " << e.message() << std::endl;
+    }
+  }
+};
+
 class NetworkDispatch {
   std::string         _dispatch_template;
   std::string         _dispatch_global;
@@ -240,6 +267,8 @@ public:
       _eloop(eloop),
       _lk(UNIT_LOCK_SESSION,
           _manager),
+      _dk(UNIT_DOCK_SESSION,
+          _manager),
       _nd(UNIT_NETWORK_PLACE,
           UNIT_NETWORK_STATE,
           _manager),
@@ -247,9 +276,14 @@ public:
           UNIT_ON_LOW_BATTERY,
           _manager),
       _ad(_manager),
-      _login1(_manager, system, [this](bool locked) {
-          this->_lk.TriggerLock(locked);
-        }),
+      _login1(_manager, system, 
+          [this](bool locked) {
+            this->_lk.TriggerLock(locked);
+          },
+          [this](bool docked) {
+            this->_dk.TriggerDock(docked);
+          }
+      ),
       _nm(system,
           [this](const std::string &id, bool active) {
             if (active || !this->_eloop->is_running())
@@ -299,7 +333,9 @@ public:
          {
            this->_ad.dispatch(message);
          })
-  {}
+  {
+
+  }
 
 private:
   /* Services Control */
@@ -309,6 +345,7 @@ private:
   Glib::RefPtr< Glib::MainLoop > _eloop;
 
   /* Dispatchers */
+  DockDispatch _dk;
   SessionLockDispatch _lk;
   NetworkDispatch _nd;
   UPowerDispatch _up;
