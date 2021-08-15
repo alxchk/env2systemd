@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <dbus-c++/dbus.h>
+#include "dbus-properties-proxy.hpp"
 #include "network-manager-proxy.hpp"
 #include "network-manager-settings-proxy.hpp"
 #include "network-manager-active-connection-proxy.hpp"
@@ -13,6 +14,7 @@ namespace NetworkManager
 
   class Settings
     : public org::freedesktop::NetworkManager::Settings::Connection_proxy,
+      public org::freedesktop::DBus::Properties_proxy,
       public DBus::ObjectProxy
   {
   public:
@@ -21,11 +23,16 @@ namespace NetworkManager
   protected:
     virtual void Removed() {}
     virtual void Updated() {}
-	void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& properties) {}
+	void PropertiesChanged(
+            const std::string& interface,
+            const std::map< std::string, ::DBus::Variant >& changed_properties,
+            const std::vector< std::string >& invalidated_properties
+        ) {}
   };
 
   class ActiveConnection
     : public org::freedesktop::NetworkManager::Connection::Active_proxy,
+      public org::freedesktop::DBus::Properties_proxy,
       public DBus::ObjectProxy
   {
   public:
@@ -34,7 +41,11 @@ namespace NetworkManager
                      std::function<void (uint32_t)> trigger);
 
   protected:
-    virtual void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& argin0);
+    virtual void PropertiesChanged(
+        const std::string& interface,
+        const std::map< std::string, ::DBus::Variant >& changed_properties,
+        const std::vector< std::string >& invalidated_properties
+    );
 
   private:
     std::function<void (uint32_t active)> __trigger;
@@ -42,6 +53,7 @@ namespace NetworkManager
 
   class Manager
     : private org::freedesktop::NetworkManager_proxy,
+      private org::freedesktop::DBus::Properties_proxy,
       private DBus::ObjectProxy
   {
   public:
@@ -62,7 +74,11 @@ namespace NetworkManager
   protected:
     virtual void DeviceRemoved(const ::DBus::Path& argin0);
     virtual void DeviceAdded(const ::DBus::Path& argin0);
-    virtual void PropertiesChanged(const std::map< std::string, ::DBus::Variant >& argin0);
+    virtual void PropertiesChanged(
+        const std::string& interface,
+        const std::map< std::string, ::DBus::Variant >& changed_properties,
+        const std::vector< std::string >& invalidated_properties
+    );
     virtual void StateChanged(const uint32_t& argin0);
     virtual void CheckPermissions();
 

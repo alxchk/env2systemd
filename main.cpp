@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     if (r == 0) {
         std::cerr << SD_ERR "Service unusable without systemd" << std::endl;
-        return -1;
+         return -1;
     } else if (r < 0) {
         std::cerr << SD_ERR "Couldn't get systemd booted status: " << ::strerror(errno) << std::endl;
         return -errno;

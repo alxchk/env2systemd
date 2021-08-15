@@ -47,8 +47,12 @@ NetworkManager::ActiveConnection::ActiveConnection(DBus::Connection& connection,
     __trigger(trigger)
 {}
 
-void NetworkManager::ActiveConnection::PropertiesChanged(const std::map< std::string, ::DBus::Variant >& argin0) {
-  for (auto &p : argin0)
+void NetworkManager::ActiveConnection::PropertiesChanged(
+    const std::string& interface,
+    const std::map< std::string, ::DBus::Variant >& changed_properties,
+    const std::vector< std::string >& invalidated_properties
+) {
+  for (auto &p : changed_properties)
     if (p.first == "State")
       __trigger(p.second);
 }
@@ -60,8 +64,12 @@ void NetworkManager::Manager::DeviceRemoved(const ::DBus::Path& argin0) {}
 
 void NetworkManager::Manager::DeviceAdded(const ::DBus::Path& argin0) {}
 
-void NetworkManager::Manager::PropertiesChanged(const std::map< std::string, ::DBus::Variant >& argin0) {
-  for (auto &i : argin0) {
+void NetworkManager::Manager::PropertiesChanged(
+    const std::string& interface,
+    const std::map< std::string, ::DBus::Variant >& changed_properties,
+    const std::vector< std::string >& invalidated_properties
+) {
+  for (auto &i : changed_properties) {
     try {
       if (i.first == "ActiveConnections") {
         const std::vector< ::DBus::Path > payload = i.second;

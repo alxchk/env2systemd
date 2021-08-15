@@ -16,11 +16,15 @@ UPower1::Manager::Manager(DBus::Connection &connection,
 
 void UPower1::Manager::DeviceAdded(const ::DBus::Path& device)
 {}
-  
+
 void UPower1::Manager::DeviceRemoved(const ::DBus::Path& device)
 {}
 
-void UPower1::Manager::PropertiesChanged()
+void UPower1::Manager::PropertiesChanged(
+    const std::string& interface,
+    const std::map< std::string, ::DBus::Variant >& changed_properties,
+    const std::vector< std::string >& invalidated_properties
+)
 {
   bool battery = OnBattery();
 

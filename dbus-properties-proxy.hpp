@@ -3,6 +3,9 @@
 
 #include <dbus-c++/dbus.h>
 #include <cassert>
+#include <string>
+#include <map>
+#include <vector>
 
 namespace org {
 namespace freedesktop {
@@ -25,7 +28,11 @@ public:
 
     /* signal handlers for this interface
      */
-    virtual void PropertiesChanged() = 0;
+    virtual void PropertiesChanged(
+        const std::string& interface,
+        const std::map< std::string, ::DBus::Variant >& changed_properties,
+        const std::vector< std::string >& invalidated_properties
+    ) = 0;
 
 private:
 
@@ -33,7 +40,17 @@ private:
      */
     void _PropertiesChanged_stub(const ::DBus::SignalMessage &sig)
     {
-        PropertiesChanged();
+        ::DBus::MessageIter ri = sig.reader();
+
+        std::string interface;
+        std::map< std::string, ::DBus::Variant > changed_properties;
+        std::vector< std::string > invalidated_properties;
+
+        ri >> interface;
+        ri >> changed_properties;
+        ri >> invalidated_properties;
+
+        PropertiesChanged(interface, changed_properties, invalidated_properties);
     }
 };
 

@@ -138,15 +138,5 @@
                 is saved to disk via Save() or from internal operations.
             </tp:docstring>
         </property>
-
-        <signal name="PropertiesChanged">
-            <arg name="properties" type="a{sv}" tp:type="String_Variant_Map">
-                <tp:docstring>
-                    A dictionary mapping property names to variant boxed values.
-                </tp:docstring>
-            </arg>
-        </signal>
-
     </interface>
-
 </node>

@@ -28,6 +28,10 @@ namespace UPower1 {
   protected:
     virtual void DeviceAdded(const ::DBus::Path& device);
     virtual void DeviceRemoved(const ::DBus::Path& device);
-    virtual void PropertiesChanged();
+    virtual void PropertiesChanged(
+        const std::string& interface,
+        const std::map< std::string, ::DBus::Variant >& changed_properties,
+        const std::vector< std::string >& invalidated_properties
+    );
   };
 }

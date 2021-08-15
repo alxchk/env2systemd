@@ -58,7 +58,7 @@
       </arg>
       <arg name="specific_object" type="o" direction="in">
         <tp:docstring>
-          The path of a connection-type-specific object this activation should use. 
+          The path of a connection-type-specific object this activation should use.
           This parameter is currently ignored for wired and mobile broadband connections,
           and the value of "/" should be used (ie, no specific object).  For WiFi
           connections, pass the object path of a specific AP from the card's scan
@@ -97,7 +97,7 @@
       </arg>
       <arg name="specific_object" type="o" direction="in">
         <tp:docstring>
-          The path of a connection-type-specific object this activation should use. 
+          The path of a connection-type-specific object this activation should use.
           This parameter is currently ignored for wired and mobile broadband connections,
           and the value of "/" should be used (ie, no specific object).  For WiFi
           connections, pass the object path of a specific AP from the card's scan
@@ -379,17 +379,6 @@
         The network connectivity state.
       </tp:docstring>
     </property>
-
-    <signal name="PropertiesChanged">
-      <tp:docstring>
-        NetworkManager's properties changed.
-      </tp:docstring>
-      <arg name="properties" type="a{sv}" tp:type="String_Variant_Map">
-        <tp:docstring>
-          The changed properties.
-        </tp:docstring>
-      </arg>
-    </signal>
 
     <signal name="DeviceAdded">
       <tp:docstring>

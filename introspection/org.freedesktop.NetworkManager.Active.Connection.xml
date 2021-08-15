@@ -103,15 +103,6 @@
         The path to the master device if the connection is a slave.
       </tp:docstring>
     </property>
-
-    <signal name="PropertiesChanged">
-        <arg name="properties" type="a{sv}" tp:type="String_Variant_Map">
-            <tp:docstring>
-                A dictionary mapping property names to variant boxed values
-            </tp:docstring>
-        </arg>
-    </signal>
-
     <tp:enum name="NM_ACTIVE_CONNECTION_STATE" type="u">
       <tp:enumvalue suffix="UNKNOWN" value="0">
         <tp:docstring>
@@ -141,4 +132,3 @@
     </tp:enum>
   </interface>
 </node>
-
