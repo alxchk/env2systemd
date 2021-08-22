@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <dbus-c++/dbus.h>
 #include "dbus-properties-proxy.hpp"
 #include "network-manager-proxy.hpp"
@@ -66,7 +67,6 @@ namespace NetworkManager
     Manager(DBus::Connection &connection,
             std::function<void (const std::string &, bool)>,
             std::function<void (bool)>);
-    ~Manager();
 
     bool isActive(const std::string &id = "");
     bool isActivating(const std::string &id = "");
@@ -85,7 +85,7 @@ namespace NetworkManager
   private:
     DBus::Connection &__connection;
     std::map< ::DBus::Path,
-              std::pair<std::string, ActiveConnection* > > __tracked_connections;
+              std::pair<std::string, std::unique_ptr<ActiveConnection> > > __tracked_connections;
     std::function<void (const std::string &, bool)> __hook_network;
     std::function<void (uint32_t)> __hook_global;
 
@@ -94,6 +94,6 @@ namespace NetworkManager
     void __triggerActiveConnection(::DBus::Path, uint32_t);
     void __processActiveConnection(const std::string&, uint32_t);
     uint32_t __connectionStateByName(const std::string &id);
-    std::string __nameActiveConnection(ActiveConnection *);
+    std::string __nameActiveConnection(std::unique_ptr<ActiveConnection> &);
   };
 }

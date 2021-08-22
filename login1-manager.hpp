@@ -5,6 +5,8 @@
 #include <dbus-c++/dbus.h>
 #include <sys/types.h>
 
+#include <memory>
+
 #include "systemd1-manager.hpp"
 #include "login1-proxy.hpp"
 #include "login1-session-proxy.hpp"
@@ -55,14 +57,13 @@ namespace Login1
   {
     DBus::Connection &_connection;
     std::function<void (bool)> __lock_hook;
-    std::list<Session*> __handled_sessions;
+    std::list<std::unique_ptr<Session>> __handled_sessions;
 
   public:
     User(
       DBus::Connection &connection,
       std::function<void (bool)> lock_hook
     );
-    ~User();
 
     void add(const DBus::Path &session);
     void remove(const DBus::Path &session);
@@ -76,7 +77,7 @@ namespace Login1
     DBus::Connection & _connection;
     std::function<void (bool)> __dock_hook;
     bool __is_docked;
-    User *__current_user;
+    std::unique_ptr<User> __current_user;
 
   public:
     Manager(
@@ -87,8 +88,6 @@ namespace Login1
     );
 
     void update();
-
-    ~Manager();
 
   protected:
     virtual void SessionNew(const std::string&, const DBus::Path&);

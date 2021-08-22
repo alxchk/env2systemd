@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
                   "READY=0");
     }
 
-    try {
+    // try {
         DBus::Connection system = DBus::Connection::SystemBus();
         DBus::Connection systemd = system_instance
             ? system
@@ -87,13 +87,13 @@ int main(int argc, char *argv[])
 
         sd_notify(0, "READY=1");
         eloop->run();
-    } catch (DBus::Error e) {
-        std::cerr << SD_ERR << "Error: DBus (Global): " << e.message() << std::endl;
-        sd_notifyf(0,
-                   "READY=0\n"
-                   "BUSERROR=%s", e.message());
-        return -1;
-    }
+    // } catch (DBus::Error e) {
+    //     std::cerr << SD_ERR << "Error: DBus (Global): " << e.message() << std::endl;
+    //     sd_notifyf(0,
+    //                "READY=0\n"
+    //                "BUSERROR=%s", e.message());
+    //     return -1;
+    // }
 
     return 0;
 }

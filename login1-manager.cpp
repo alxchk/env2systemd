@@ -1,8 +1,10 @@
 #include <systemd/sd-login.h>
 #include <systemd/sd-daemon.h>
-#include <exception>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <exception>
+#include <memory>
 
 #include "login1-manager.hpp"
 
@@ -14,13 +16,13 @@ Login1::User::User(DBus::Connection &connection, std::function<void (bool)> lock
     for (auto session: Sessions()) {
         std::cerr << "Handle new session: " << session._1 << std::endl;
         __handled_sessions.push_back(
-            new Session(_connection, session._2, __lock_hook)
+            std::make_unique<Session>(_connection, session._2, __lock_hook)
         );
     }
 }
 
 void Login1::User::add(const DBus::Path &new_session) {
-    for (auto session: __handled_sessions) {
+    for (auto &session: __handled_sessions) {
         if (session->path() == new_session) {
             return;
         }
@@ -28,26 +30,22 @@ void Login1::User::add(const DBus::Path &new_session) {
 
     std::cerr << "Handle new session: " << new_session << std::endl;
     __handled_sessions.push_back(
-        new Session(_connection, new_session, __lock_hook)
+        std::make_unique<Session>(_connection, new_session, __lock_hook)
     );
 }
 
 void Login1::User::remove(const DBus::Path &removed_session) {
-    for (auto session: __handled_sessions) {
-        if (session->path() == removed_session) {
-            std::cerr << "Remove handled session " << removed_session << std::endl;
-            delete session;
-            __handled_sessions.remove(session);
+    for (auto session = __handled_sessions.begin();
+         session != __handled_sessions.end();
+         ++ session)
+    {
+        if ((*session)->path() == removed_session) {
+            std::cerr << "Remove handled session " << removed_session
+                      << std::endl;
+            __handled_sessions.erase(session);
             return;
         }
     }
-}
-
-Login1::User::~User() {
-    for (auto handled_session: __handled_sessions) {
-        delete handled_session;
-    }
-    __handled_sessions.clear();
 }
 
 Login1::Session::Session(DBus::Connection &connection,
@@ -83,7 +81,7 @@ Login1::Manager::Manager(
       __current_user(nullptr)
 {
     try {
-        this->__current_user = new User(connection, lock_hook);
+        this->__current_user = std::make_unique<User>(connection, lock_hook);
     } catch (DBus::Error e) {
         std::cerr << SD_ERR << "Error: DBus (Login1): " << e.message() << std::endl;
     }
@@ -117,13 +115,5 @@ void Login1::Manager::SessionRemoved(const std::string &session, const DBus::Pat
     if (this->__current_user) {
         std::cerr << "Removed session (global)" << session << std::endl;
         __current_user->remove(object);
-    }
-}
-
-Login1::Manager::~Manager()
-{
-    if (this->__current_user) {
-        delete this->__current_user;
-        this->__current_user = nullptr;
     }
 }

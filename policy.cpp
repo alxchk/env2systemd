@@ -276,7 +276,7 @@ public:
           UNIT_ON_LOW_BATTERY,
           _manager),
       _ad(_manager),
-      _login1(_manager, system, 
+      _login1(_manager, system,
           [this](bool locked) {
             this->_lk.TriggerLock(locked);
           },

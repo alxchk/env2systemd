@@ -15,15 +15,6 @@ NetworkManager::Manager::Manager(DBus::Connection &connection,
   __registerActiveConnections(ActiveConnections());
 }
 
-NetworkManager::Manager::~Manager()
-{
-  __hook_global(false);
-  for (auto &c: __tracked_connections) {
-    __hook_network(c.second.first, false);
-    delete c.second.second;
-  }
-}
-
 bool NetworkManager::Manager::isActive(const std::string &id)
 {
   if (id == "")
@@ -110,8 +101,7 @@ uint32_t NetworkManager::Manager::__connectionStateByName(const std::string &id)
 void NetworkManager::Manager::__triggerActiveConnection(::DBus::Path path, uint32_t state) {
   auto i = __tracked_connections.find(path);
   assert(i != __tracked_connections.end());
-  auto c = i->second.second;
-  assert(c);
+  auto &c = i->second.second;
 
   std::cerr << "Event on "  << path << " (" << state << ")" << std::endl;
   __processActiveConnection(i->second.first, state);
@@ -119,11 +109,10 @@ void NetworkManager::Manager::__triggerActiveConnection(::DBus::Path path, uint3
   if (state == NM_ACTIVE_CONNECTION_STATE_DEACTIVATED) {
     std::cout << "NM: Dropping " << path << std::endl;
     __tracked_connections.erase(i);
-    delete c;
   }
 }
 
-std::string NetworkManager::Manager::__nameActiveConnection(ActiveConnection * c) {
+std::string NetworkManager::Manager::__nameActiveConnection(std::unique_ptr<ActiveConnection> &c) {
     try {
       std::cerr << "c->Connection(): " << c->Connection() << std::endl;
       auto settings = NetworkManager::Settings(__connection,
@@ -152,20 +141,24 @@ void NetworkManager::Manager::__processActiveConnection(const std::string &name,
 void NetworkManager::Manager::__registerActiveConnections(const std::vector< ::DBus::Path> &active) {
   for (auto &c : active) {
     if (__tracked_connections.find(c) == __tracked_connections.end()) {
-      auto nconn = new ActiveConnection(__connection, c,
-                                        [this,c](uint32_t state) {
-                                          this->__triggerActiveConnection(c, state);
-                                        });
+      auto nconn = std::make_unique<ActiveConnection>(
+          __connection, c, [this,c](uint32_t state) {
+              this->__triggerActiveConnection(c, state);
+          });
+
       std::string name = __nameActiveConnection(nconn);
       if (name == "") {
         std::cerr << "Couldn't get id for " << c << ", give up" << std::endl;
-        delete nconn;
         continue;
       }
 
+      auto state = nconn->State();
+
       std::cerr << "NM: Wating for events at " << c << " (" << name << ")" << std::endl;
-      __tracked_connections[c] = std::pair<std::string, ActiveConnection *>(name, nconn);
-      __processActiveConnection(name, nconn->State());
+      __tracked_connections[c] = std::pair<
+              std::string, std::unique_ptr<ActiveConnection>
+          >(name, std::move(nconn));
+      __processActiveConnection(name, state);
     }
   }
 }

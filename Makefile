@@ -17,8 +17,9 @@ PROXIES  := systemd1-manager-proxy.hpp \
 		network-manager-proxy.hpp \
 		network-manager-settings-proxy.hpp \
 		network-manager-active-connection-proxy.hpp \
+		upower1-device-proxy.hpp \
 		upower1-proxy.hpp
-CXXSTD   := -std=gnu++11
+CXXSTD   := -std=gnu++14
 OPTIMIZE ?= -O2 -flto
 CXXFLAGS += $(shell pkg-config --cflags $(PKGDEPS)) $(CXXSTD) $(OPTIMIZE)
 LDFLAGS  += $(shell pkg-config --libs $(PKGDEPS)) -flto -Wl,-O1 -Wl,--as-needed
@@ -43,6 +44,9 @@ login1-user-proxy.hpp: introspection/org.freedesktop.login1.User.xml
 	dbusxx-xml2cpp $< --proxy=$@
 
 upower1-proxy.hpp: introspection/org.freedesktop.UPower.xml
+	dbusxx-xml2cpp $< --proxy=$@
+
+upower1-device-proxy.hpp: introspection/org.freedesktop.UPower.Device.xml
 	dbusxx-xml2cpp $< --proxy=$@
 
 network-manager-proxy.hpp: introspection/org.freedesktop.NetworkManager.xml
