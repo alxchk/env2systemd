@@ -38,7 +38,7 @@ UPower1::Manager::Manager(DBus::Connection &connection,
                 this->OnChanges();
             });
 
-        if (obj->Type() == 1 && obj->SavedName() == "AC") {
+        if (obj->Type() == 1 && obj->SavedName().find("AC", 0) == 0) {
             std::cout << "[Add AC Device] " << obj->SavedName()
                       << " Online=" << obj->Online() << std::endl;
 
