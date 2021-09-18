@@ -362,6 +362,19 @@ std::shared_ptr<Policy> policy(DBus::Connection &systemd_session,
                                DBus::Connection &system,
                                Glib::RefPtr< Glib::MainLoop > eloop)
 {
-  return std::shared_ptr<Policy>(new DefaultPolicy(systemd_session,
-                                                   system, eloop));
+  /* TODO: Refactor to use NameOwnerChanged */
+  for (int retry=0; retry<4; ++ retry) {
+    try {
+      return std::shared_ptr<Policy>(
+          new DefaultPolicy(systemd_session, system, eloop));
+    } catch (DBus::Error e) {
+      std::cerr << SD_ERR << "Error: DBus (Policy): "
+                << e.message() << " Retry " << retry << "/5 (in 1 sec)"
+                << std::endl;
+      sleep(1);
+    }
+  }
+
+  return std::shared_ptr<Policy>(
+      new DefaultPolicy(systemd_session, system, eloop));
 }
