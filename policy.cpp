@@ -221,15 +221,15 @@ public:
     const static std::string open = "open";
     const static std::string close = "close";
 
-    if (cmpstr(klass, hkey) == 0 && (
-            cmpstr(subklass, "UP") == 0
-        || cmpstr(subklass, "DOWN") == 0
-        || cmpstr(subklass, "LEFT") == 0
-        || cmpstr(subklass, "RIGHT") == 0
-        || cmpstr(subklass, "ENTER") == 0
-        || cmpstr(subklass, "KP_ENTER") == 0))
+    if (cmpstr(klass, button + "/up")
+        || cmpstr(klass, button + "/down")
+        || cmpstr(klass, button + "/left")
+        || cmpstr(klass, button + "/right")
+        || cmpstr(klass, button + "/kp_enter")
+        || cmpstr(klass, button + "/enter")) {
         // Do not handle these regular key events
         return;
+    }
 
     try {
       if (cmpstr(klass, button) == 0 || cmpstr(klass, video) == 0 || cmpstr(subklass, hkey)) {
